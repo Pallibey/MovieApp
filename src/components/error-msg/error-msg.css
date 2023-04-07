@@ -1,0 +1,3 @@
+.blockquote-footer::before {
+    font-size: 0;
+}
