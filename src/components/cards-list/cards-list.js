@@ -201,13 +201,14 @@ export default class CardsList extends React.Component {
       } else {
         content = this.secondTabRender(this.state.currentPageRated)
       }
-    } else {
-      content = <ErrorMsg />
     }
     return content
   }
 
   render() {
+    if (this.state.status === 'error') {
+      return <ErrorMsg />
+    }
     const { currentPage, currentPageRated, totalItems, totalItemsRated } = this.state
     const { tab } = this.props
     return (
