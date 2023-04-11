@@ -11,6 +11,7 @@ export default class CardsList extends React.Component {
     data: [],
     ratedData: [],
     status: 'loading',
+    error: false,
     currentPage: 1,
     currentPageRated: 1,
     totalItems: 0,
@@ -34,8 +35,13 @@ export default class CardsList extends React.Component {
     }
   }
 
+  componentDidCatch(err) {
+    console.log(err)
+    this.setState({ error: true })
+  }
+
   getTopRated = (page) => {
-    const service = this.props.swapiService
+    const service = this.props.movieService
     this.setState({ status: 'loading' })
     service
       .getTopRated(page)
@@ -48,7 +54,7 @@ export default class CardsList extends React.Component {
         this.setState({ data: results, status: 'ok', totalItems, currentPage: page })
       })
       .catch(() => {
-        this.setState({ status: 'error' })
+        this.setState({ error: true })
       })
   }
 
@@ -59,7 +65,7 @@ export default class CardsList extends React.Component {
       }, 1000)
       return
     }
-    const service = this.props.swapiService
+    const service = this.props.sessionService
     this.setState({ status: 'loading' })
     service
       .getRated(guestID, page)
@@ -76,13 +82,13 @@ export default class CardsList extends React.Component {
         }
       })
       .catch(() => {
-        this.setState({ status: 'error' })
+        this.setState({ error: true })
       })
   }
 
   getMovie = (text, page) => {
     this.setState({ status: 'loading' })
-    const service = this.props.swapiService
+    const service = this.props.movieService
     let replaceSpace = text.replace(/ /g, '+')
     const pageNumber = page ? page : 1
     service
@@ -132,7 +138,6 @@ export default class CardsList extends React.Component {
             let genresNames = genresArr.filter((element) => movie.genre_ids.includes(element.id))
             return (
               <Card
-                key={movie.id}
                 id={movie.id}
                 voteAverage={movie.vote_average}
                 poster={movie.poster_path}
@@ -142,7 +147,7 @@ export default class CardsList extends React.Component {
                 description={movie.overview}
                 rated={rating}
                 guestID={this.props.guestID}
-                swapiService={this.props.swapiService}
+                sessionService={this.props.sessionService}
               />
             )
           }}
@@ -166,7 +171,6 @@ export default class CardsList extends React.Component {
               let genresNames = genresArr.filter((element) => movie.genre_ids.includes(element.id))
               return (
                 <Card
-                  key={movie.id}
                   id={movie.id}
                   voteAverage={movie.vote_average}
                   poster={movie.poster_path}
@@ -175,7 +179,7 @@ export default class CardsList extends React.Component {
                   release={movie.release_date}
                   genres={genresNames}
                   rated={movie.rating}
-                  swapiService={this.props.swapiService}
+                  sessionService={this.props.sessionService}
                   guestID={this.props.guestID}
                 />
               )
@@ -206,7 +210,7 @@ export default class CardsList extends React.Component {
   }
 
   render() {
-    if (this.state.status === 'error') {
+    if (this.state.error === true) {
       return <ErrorMsg />
     }
     const { currentPage, currentPageRated, totalItems, totalItemsRated } = this.state

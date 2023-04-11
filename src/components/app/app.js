@@ -5,7 +5,8 @@ import './app.css'
 
 import CardsList from '../cards-list/cards-list'
 import SearchPanel from '../search-panel/search-panel'
-import SwapiService from '../../services/swapi-service'
+import ErrorMsg from '../error-msg/error-msg'
+import { MovieService, SessionService } from '../../services/swapi-service'
 import { SwapiServiceProvider } from '../swapi-service-context/swapi-service-context'
 
 export default class App extends React.Component {
@@ -13,24 +14,31 @@ export default class App extends React.Component {
     searchingText: '',
     genresData: [],
     guestID: null,
+    error: false,
   }
 
-  swapiService = new SwapiService()
+  movieService = new MovieService()
+  sessionService = new SessionService()
 
   componentDidMount() {
     this.getGenres()
-    if (sessionStorage.getItem('guestID') === null) {
-      this.swapiService.createGuestSession().then((data) => {
-        sessionStorage.setItem('guestID', data.guest_session_id)
+    if (localStorage.getItem('guestID') === null) {
+      this.sessionService.createGuestSession().then((data) => {
+        localStorage.setItem('guestID', data.guest_session_id)
         this.setState({ guestID: data.guest_session_id })
       })
     } else {
-      this.setState({ guestID: sessionStorage.getItem('guestID') })
+      this.setState({ guestID: localStorage.getItem('guestID') })
     }
   }
 
+  componentDidCatch(err) {
+    console.log(err)
+    this.setState({ error: true })
+  }
+
   getGenres = () => {
-    this.swapiService.getGenres().then((genresArr) => {
+    this.movieService.getGenres().then((genresArr) => {
       this.setState({ genresData: genresArr })
     })
   }
@@ -44,6 +52,9 @@ export default class App extends React.Component {
   }
 
   render() {
+    if (this.state.error === true) {
+      return <ErrorMsg />
+    }
     return (
       <SwapiServiceProvider value={this.state.genresData}>
         <Offline>
@@ -69,7 +80,8 @@ export default class App extends React.Component {
                   <main className="movie-list d-flex flex-column align-items-center">
                     <CardsList
                       searchingText={this.state.searchingText}
-                      swapiService={this.swapiService}
+                      movieService={this.movieService}
+                      sessionService={this.sessionService}
                       tab={1}
                       guestID={this.state.guestID}
                     />
@@ -85,7 +97,8 @@ export default class App extends React.Component {
                   <main className="movie-list d-flex flex-column align-items-center">
                     <CardsList
                       searchingText={this.state.searchingText}
-                      swapiService={this.swapiService}
+                      movieService={this.movieService}
+                      sessionService={this.sessionService}
                       tab={2}
                       guestID={this.state.guestID}
                     />

@@ -9,6 +9,7 @@ import img from './poster_none.jpg'
 export default class Card extends React.Component {
   state = {
     rating: 0,
+    error: false,
   }
 
   componentDidMount() {
@@ -21,12 +22,17 @@ export default class Card extends React.Component {
     }
   }
 
+  componentDidCatch(err) {
+    console.log(err)
+    this.setState({ error: true })
+  }
+
   descriptionSlicer = (text, title) => {
     let des = text
-    if (des.length > 145 && title.length < 31) {
-      des = des.replace(/^(.{142}[\w]*).*/, '$1') + '...'
-    } else if (des.length > 115 && title.length < 60) {
-      des = des.replace(/^(.{112}[\w]*).*/, '$1') + '...'
+    if (des.length > 173 && title.length < 27) {
+      des = des.replace(/^(.{170}[\w]*).*/, '$1') + '...'
+    } else if (des.length > 153 && title.length < 60) {
+      des = des.replace(/^(.{150}[\w]*).*/, '$1') + '...'
     } else if (des.length > 33 && title.length >= 60) {
       des = des.replace(/^(.{30}[\w]*).*/, '$1') + '...'
     }
@@ -82,13 +88,29 @@ export default class Card extends React.Component {
   }
 
   render() {
-    const { id, poster, voteAverage, title, release, genres, description, guestID, swapiService } = this.props
+    if (this.state.error) {
+      return (
+        <div className="card mb-4 row g-0">
+          <div className="col-5">
+            <Image src={img} className="card-img" />
+          </div>
+          <div className="col-7">
+            <div className="card-body">
+              <h5 className="card-title">An unexpected error has occurred</h5>
+              <p className="card-text">We are already working on fixing it</p>
+            </div>
+            <Rate allowHalf={true} value={0} count={10} disabled={true} style={{ fontSize: 15.5, marginLeft: 15 }} />
+          </div>
+        </div>
+      )
+    }
+    const { id, poster, voteAverage, title, release, genres, description, guestID, sessionService } = this.props
     return (
       <div className="card mb-4 row g-0">
         <div className="col-5">
           <Image src={`https://image.tmdb.org/t/p/w220_and_h330_face${poster}`} className="card-img" fallback={img} />
         </div>
-        <div className="col-6">
+        <div className="col-7">
           <div className="card-body">
             <h5 className="card-title">{title}</h5>
             <div className="rate-circle" style={this.setColorStyle(voteAverage)}>
@@ -99,15 +121,19 @@ export default class Card extends React.Component {
             </p>
             <p className="card-text d-flex">{this.renderGenres(genres)}</p>
             <p className="card-text">{this.descriptionSlicer(description, title)}</p>
-            <Rate
-              allowHalf={true}
-              value={this.state.rating}
-              onChange={(rate) => {
-                swapiService.rateMovie(rate, id, guestID)
-                this.setState({ rating: rate })
-              }}
-            />
           </div>
+          <Rate
+            allowHalf={true}
+            value={this.state.rating}
+            count={10}
+            style={{ fontSize: 15.5, marginLeft: 15 }}
+            onChange={(rate) => {
+              sessionService.rateMovie(rate, id, guestID).catch(() => {
+                this.setState({ error: true })
+              })
+              this.setState({ rating: rate })
+            }}
+          />
         </div>
       </div>
     )

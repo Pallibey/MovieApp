@@ -1,3 +1,7 @@
 .blockquote-footer::before {
     font-size: 0;
 }
+.blockquote-footer {
+    display: flex;
+    flex-direction: column;
+}
