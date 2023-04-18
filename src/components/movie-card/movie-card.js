@@ -22,9 +22,8 @@ export default class Card extends React.Component {
     }
   }
 
-  componentDidCatch(err) {
-    console.log(err)
-    this.setState({ error: true })
+  static getDerivedStateFromError() {
+    return { error: true }
   }
 
   descriptionSlicer = (text, title) => {
@@ -64,7 +63,7 @@ export default class Card extends React.Component {
   }
 
   renderGenres = (arr) => {
-    if (arr.length === 0) {
+    if (!Array.isArray(arr) || arr.length === 0) {
       return null
     }
     if (arr.length >= 2) {

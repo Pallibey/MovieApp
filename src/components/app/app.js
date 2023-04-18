@@ -23,24 +23,33 @@ export default class App extends React.Component {
   componentDidMount() {
     this.getGenres()
     if (localStorage.getItem('guestID') === null) {
-      this.sessionService.createGuestSession().then((data) => {
-        localStorage.setItem('guestID', data.guest_session_id)
-        this.setState({ guestID: data.guest_session_id })
-      })
+      this.sessionService
+        .createGuestSession()
+        .then((data) => {
+          localStorage.setItem('guestID', data.guest_session_id)
+          this.setState({ guestID: data.guest_session_id })
+        })
+        .catch(() => {
+          this.setState({ error: true })
+        })
     } else {
       this.setState({ guestID: localStorage.getItem('guestID') })
     }
   }
 
-  componentDidCatch(err) {
-    console.log(err)
-    this.setState({ error: true })
+  static getDerivedStateFromError() {
+    return { error: true }
   }
 
   getGenres = () => {
-    this.movieService.getGenres().then((genresArr) => {
-      this.setState({ genresData: genresArr })
-    })
+    this.movieService
+      .getGenres()
+      .then((genresArr) => {
+        this.setState({ genresData: genresArr })
+      })
+      .catch(() => {
+        this.setState({ error: true })
+      })
   }
 
   onChangeTabs = (key) => {

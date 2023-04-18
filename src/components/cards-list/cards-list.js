@@ -35,9 +35,8 @@ export default class CardsList extends React.Component {
     }
   }
 
-  componentDidCatch(err) {
-    console.log(err)
-    this.setState({ error: true })
+  static getDerivedStateFromError() {
+    return { error: true }
   }
 
   getTopRated = (page) => {
@@ -119,10 +118,34 @@ export default class CardsList extends React.Component {
     }
   }
 
+  cardRender = (movie, rating) => {
+    return (
+      <SwapiServiceConsumer key={movie.id}>
+        {(genresArr) => {
+          let genresNames = genresArr.filter((element) => movie.genre_ids.includes(element.id))
+          return (
+            <Card
+              id={movie.id}
+              voteAverage={movie.vote_average}
+              poster={movie.poster_path}
+              description={movie.overview}
+              title={movie.title}
+              release={movie.release_date}
+              genres={genresNames}
+              rated={movie.rating || rating}
+              sessionService={this.props.sessionService}
+              guestID={this.props.guestID}
+            />
+          )
+        }}
+      </SwapiServiceConsumer>
+    )
+  }
+
   firstTabRender = () => {
     const { data, ratedData } = this.state
     let ratedID = []
-    if (typeof ratedData !== 'undefined') {
+    if (Array.isArray(ratedData) && ratedData.length > 0) {
       ratedID = ratedData.map((element) => {
         return element.id
       })
@@ -132,32 +155,15 @@ export default class CardsList extends React.Component {
       if (ratedID.includes(movie.id)) {
         rating = ratedData.find((element) => element.id === movie.id).rating
       }
-      return (
-        <SwapiServiceConsumer key={movie.id}>
-          {(genresArr) => {
-            let genresNames = genresArr.filter((element) => movie.genre_ids.includes(element.id))
-            return (
-              <Card
-                id={movie.id}
-                voteAverage={movie.vote_average}
-                poster={movie.poster_path}
-                title={movie.title}
-                release={movie.release_date}
-                genres={genresNames}
-                description={movie.overview}
-                rated={rating}
-                guestID={this.props.guestID}
-                sessionService={this.props.sessionService}
-              />
-            )
-          }}
-        </SwapiServiceConsumer>
-      )
+      return this.cardRender(movie, rating)
     })
   }
 
   secondTabRender = (page) => {
     const { ratedData } = this.state
+    if (!Array.isArray(ratedData) || ratedData.length === 0) {
+      return null
+    }
     let check = 1
     let resultArr = ratedData.map((movie) => {
       if (check < page * 20 - 19) {
@@ -165,27 +171,7 @@ export default class CardsList extends React.Component {
         return null
       } else if (check >= page * 20 - 19 && check <= page * 20) {
         check++
-        return (
-          <SwapiServiceConsumer key={movie.id}>
-            {(genresArr) => {
-              let genresNames = genresArr.filter((element) => movie.genre_ids.includes(element.id))
-              return (
-                <Card
-                  id={movie.id}
-                  voteAverage={movie.vote_average}
-                  poster={movie.poster_path}
-                  description={movie.overview}
-                  title={movie.title}
-                  release={movie.release_date}
-                  genres={genresNames}
-                  rated={movie.rating}
-                  sessionService={this.props.sessionService}
-                  guestID={this.props.guestID}
-                />
-              )
-            }}
-          </SwapiServiceConsumer>
-        )
+        return this.cardRender(movie)
       } else {
         return null
       }
